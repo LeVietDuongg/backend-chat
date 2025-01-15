@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+let messages = [];
 
 // Cung cấp file tĩnh cho client
 app.use(express.static('public'));
@@ -13,10 +14,22 @@ app.use(express.static('public'));
 io.on('connection', (socket) => {
     console.log('Người dùng đã kết nối');
 
-    // Nhận tin nhắn từ client và phát tới tất cả người dùng
-    socket.on('chat message', (msg) => {
+    socket.on('setUsername', (username) => {
+        socket.username = username;
+    });
+
+    socket.on('chat message', (text) => {
+        const msg = {
+            user: socket.username || 'Anonymous',
+            text,
+            time: new Date().toLocaleString()
+        };
+        messages.push(msg);
+        if (messages.length > 10) messages.shift();
         io.emit('chat message', msg);
     });
+
+    socket.emit('initMessages', messages);
 
     socket.on('disconnect', () => {
         console.log('Người dùng đã ngắt kết nối');
@@ -24,7 +37,7 @@ io.on('connection', (socket) => {
 });
 
 // Chạy server
-const PORT = 3000;
+const PORT = 8080;
 server.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
 });
