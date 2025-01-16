@@ -18,17 +18,17 @@ io.on('connection', (socket) => {
         socket.username = username;
     });
 
-    socket.on('chat message', (text) => {
-        const msg = {
-            user: socket.username || 'Anonymous',
-            text,
-            time: new Date().toLocaleString()
-        };
-        messages.push(msg);
-        if (messages.length > 10) messages.shift();
-        io.emit('chat message', msg);
+    socket.on('chat message', (msg) => {
+        const item = document.createElement('li');
+        if (msg.user === localStorage.getItem('chatUsername')) {
+            item.classList.add('my-message');
+        } else {
+            item.classList.add('other-message');
+        }
+        item.textContent = `${msg.user} at ${msg.time}: ${msg.text}`;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
     });
-
     socket.emit('initMessages', messages);
 
     socket.on('disconnect', () => {
